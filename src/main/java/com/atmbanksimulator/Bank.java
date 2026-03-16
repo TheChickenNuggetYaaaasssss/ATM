@@ -27,7 +27,6 @@ public class Bank {
     public boolean accountNumberExists(String accNumber) {
         if (numAccounts > 0) {
             for (BankAccount account : accounts) {
-                    System.out.println(account);
                 if (account != null){
                     if (account.getAccNumber().equals(accNumber)) {
                         return true;

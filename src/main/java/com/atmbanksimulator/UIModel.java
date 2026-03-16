@@ -142,6 +142,7 @@ public class UIModel {
                     // Login failed: reset ATM and display error
                     message = "Login failed: Unknown Account/Password";
                     reset(message, STATE_ACCOUNT_NO);
+                    result = "Enter Account Number";
                 }
                 break;
 
@@ -208,7 +209,7 @@ public class UIModel {
                 } else {
                     if (bank.addBankAccount(accNumber, accPasswd, 0, numberPadInput)){
                         reset("Congratulations on your new account!", STATE_ACCOUNT_NO);
-                        result = "Please login by entering your account number";
+                        result = "Please login by entering your account No";
                     } else {
                         reset("Error when making your account",  STATE_NEW_ACCOUNT_NO);
                         result = "Please try again";
