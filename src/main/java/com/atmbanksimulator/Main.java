@@ -21,7 +21,7 @@ public class Main extends Application {
         PrimeAccount primeAccount1 = new PrimeAccount("54321", "69420", 6967420);
         SavingsAccount savingsAccount1 = new SavingsAccount("10001", "11111", 10000);
 
-        bank.addBankAccount("10002", "22222", 50);
+        bank.addBankAccount("10002", "22222", 50, "");
         bank.addBankAccount(studentAccount1);
         bank.addBankAccount(primeAccount1);
         bank.addBankAccount(savingsAccount1);

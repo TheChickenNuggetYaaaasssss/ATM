@@ -23,23 +23,45 @@ public class Bank {
         return new BankAccount(accNumber, accPasswd, balance);
     }
 
+    // a function to check if a given account no is being used or not
+    public boolean accountNumberExists(String accNumber) {
+        if (numAccounts > 0) {
+            for (BankAccount account : accounts) {
+                    System.out.println(account);
+                if (account != null){
+                    if (account.getAccNumber().equals(accNumber)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     // a method to add a new bank account to the bank - it returns true if it succeeds
     // or false if it fails (because the bank is 'full')
     public boolean addBankAccount(BankAccount a) {
         if (numAccounts < maxAccounts) {
-            accounts[numAccounts] = a;
-            numAccounts++ ;
-            return true;
-        } else {
-            return false;
+            if ( !accountNumberExists(a.getAccNumber()) ) {
+
+                accounts[numAccounts] = a;
+                numAccounts++ ;
+                return true;
+            }
         }
+        return false;
     }
 
     // Variant of addBankAccount: creates a BankAccount and adds it in one step.
     // This is an example of method overloading: two methods can share the same name
     // if they have different parameter lists.
-    public boolean addBankAccount(String accNumber, String accPasswd, int balance) {
-        return addBankAccount(makeBankAccount(accNumber, accPasswd, balance));
+    public boolean addBankAccount(String accNumber, String accPasswd, int balance, String accType) {
+        return switch (accType) {
+            case "1" -> addBankAccount(new PrimeAccount(accNumber, accPasswd, balance));
+            case "2" -> addBankAccount(new StudentAccount(accNumber, accPasswd, balance));
+            case "3" -> addBankAccount(new SavingsAccount(accNumber, accPasswd, balance));
+            default -> false;
+        };
     }
 
     // Check whether the given accountNumber and password match an existing BankAccount.
@@ -52,7 +74,7 @@ public class Bank {
         // - If found, set 'loggedInAccount' to that account and return true.
         // - If not found, reset 'loggedInAccount' to null and return false.
         for (BankAccount b: accounts) {
-            if (b.getAccNumber().equals(accountNumber) && b.getAccPasswd().equals(password)) {
+            if (b!=null && b.getAccNumber().equals(accountNumber) && b.getAccPasswd().equals(password)) {
                 // found the right account
                 loggedInAccount = b;
                 return true;
@@ -64,7 +86,7 @@ public class Bank {
     }
 
     public String updateAccPasswd(String accountNumber, String passwd) {
-        if (passwd.length() <= 5) {
+        if (passwd.length() == 5) {
 
             for (BankAccount b : accounts) {
                 if (b.getAccNumber().equals(accountNumber)) {

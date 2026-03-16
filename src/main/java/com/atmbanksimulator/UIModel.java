@@ -22,6 +22,9 @@ public class UIModel {
     private final String STATE_LOGGED_IN = "logged_in";
     private final String STATE_RESET_PASSWORD_CURRENT = "reset_password_current";
     private final String STATE_RESET_PASSWORD_NEW = "reset_password_new";
+    private final String STATE_NEW_ACCOUNT_NO = "new_account_no";
+    private final String STATE_NEW_ACCOUNT_PASSWORD = "new_account_password";
+    private final String STATE_NEW_ACCOUNT_TYPE = "new_account_type";
 
     // Variables representing the state and data of the ATM UIModel
     private String state = STATE_ACCOUNT_NO;    // Current state of the ATM
@@ -54,11 +57,10 @@ public class UIModel {
     // - Set state to STATE_ACCOUNT_NO
     // - Clear the numberPadInput
     // - Display the provided message and user instructions
-    private void reset(String msg) {
-        setState(STATE_ACCOUNT_NO);
+    private void reset(String msg, String state) {
+        setState(state);
         numberPadInput = "";
         message = msg;
-        result = "Enter your account number\nFollowed by \"Ent\"";
     }
 
     // Change the ATM state and print a debug message whenever the state changes
@@ -111,7 +113,7 @@ public class UIModel {
                 // If nothing was entered, reset with "Invalid Account Number"
                 if (numberPadInput.equals("")) {
                     message = "Invalid Account Number";
-                    reset(message);
+                    reset(message, STATE_ACCOUNT_NO);
                 }
                 else{
                     // Save the entered number as accNumber, clear numberPadInput,
@@ -139,7 +141,7 @@ public class UIModel {
                 } else {
                     // Login failed: reset ATM and display error
                     message = "Login failed: Unknown Account/Password";
-                    reset(message);
+                    reset(message, STATE_ACCOUNT_NO);
                 }
                 break;
 
@@ -151,18 +153,68 @@ public class UIModel {
                 if (bank.login(accNumber, accPasswd) ) {
                     setState(STATE_RESET_PASSWORD_NEW);
                     message = "Enter New Password";
-                    update();
                 } else {
                     message = "Incorrect Password";
-                    update();
                 }
+                break;
 
             case STATE_RESET_PASSWORD_NEW:
                 //get new password
                 accPasswd = numberPadInput;
                 numberPadInput = "";
                 message = bank.updateAccPasswd(accNumber, accPasswd);
-                update();
+                break;
+
+            case  STATE_NEW_ACCOUNT_NO:
+
+                accNumber = numberPadInput;
+                numberPadInput = "";
+                if (bank.accountNumberExists(accNumber) ) {
+                    reset("That account number already exists", STATE_NEW_ACCOUNT_NO);
+                    result = "Enter a different 5 character Account No \nFollowed by \"Ent\"";
+                    break;
+                }
+
+                if (accNumber.length() == 5) {
+
+                    setState(STATE_NEW_ACCOUNT_PASSWORD);
+                    message = "Account Number Accepted";
+                    result = "Now enter your password\nFollowed by \"Ent\"";
+
+                } else {
+                    message = "Account number must be 5 characters";
+                }
+                break;
+
+            case STATE_NEW_ACCOUNT_PASSWORD:
+                accPasswd = numberPadInput;
+                numberPadInput = "";
+                if (accPasswd.length() == 5) {
+                    setState(STATE_NEW_ACCOUNT_TYPE);
+                    message = "Password Accepted";
+                    result = "Please enter your Account type" +
+                            "\n(1) Prime  (2) Student  (3) Savings" +
+                            "\nFollowed by \"Ent\"";
+                } else {
+                    reset("Password Invalid", STATE_NEW_ACCOUNT_PASSWORD);
+                    result = "Enter a new 5 character password\nFollowed by \"Ent\"";
+                }
+                break;
+
+            case STATE_NEW_ACCOUNT_TYPE:
+
+                if (numberPadInput.equals("") || numberPadInput.length() != 1 || Integer.parseInt(numberPadInput) > 3) {
+                    reset("Invalid Account Type",  STATE_NEW_ACCOUNT_TYPE);
+                } else {
+                    if (bank.addBankAccount(accNumber, accPasswd, 0, numberPadInput)){
+                        reset("Congratulations on your new account!", STATE_ACCOUNT_NO);
+                        result = "Please login by entering your account number";
+                    } else {
+                        reset("Error when making your account",  STATE_NEW_ACCOUNT_NO);
+                        result = "Please try again";
+                    }
+                }
+
 
             case STATE_LOGGED_IN:
             default:
@@ -202,7 +254,7 @@ public class UIModel {
             message = "Balance Available";
             result = "Your Balance is: " + bank.getBalance();
         } else {
-            reset("You are not logged in");
+            reset("You are not logged in", STATE_ACCOUNT_NO);
         }
         update();
     }
@@ -231,7 +283,7 @@ public class UIModel {
             numberPadInput = "";
         }
         else {
-            reset("You are not logged in");
+            reset("You are not logged in", STATE_ACCOUNT_NO);
         }
         update();
     }
@@ -255,7 +307,7 @@ public class UIModel {
             numberPadInput = "";
         }
         else {
-            reset("You are not logged in");
+            reset("You are not logged in", STATE_ACCOUNT_NO);
         }
         update();
     }
@@ -265,10 +317,10 @@ public class UIModel {
     // - Otherwise, reset the ATM and display an error message
     public void processFinish() {
         if (state.equals(STATE_LOGGED_IN) ) {
-            reset("Thank you for using the Bank ATM");
+            reset("Thank you for using the Bank ATM", STATE_ACCOUNT_NO);
             bank.logout();
         } else {
-            reset("You are not logged in");
+            reset("You are not logged in", STATE_ACCOUNT_NO);
         }
         update();
     }
@@ -276,12 +328,12 @@ public class UIModel {
     // Handle unknown or invalid buttons for the current state:
     // - Reset the ATM and display an "Invalid Command" message
     public void processUnknownKey(String action) {
-        reset("Invalid Command");
+        reset("Invalid Command", state);
         update();
     }
 
 
-    // test message
+    // Reset password
     public void processResetButton() {
         switch (state) {
             case STATE_LOGGED_IN:
@@ -292,7 +344,20 @@ public class UIModel {
             default:
                 message = "You must be logged in";
                 update();
+                break;
         }
+    }
+
+
+    // add new account
+    public void processNewAcc() {
+        //ensure no account is logged in
+        bank.logout();
+        setState(STATE_NEW_ACCOUNT_NO);
+        message = "Creating new Account";
+        result = "Enter a 5 character Account No \nFollowed by \"Ent\"";
+        update();
+
     }
 
     // Notify the View of changes by calling its update method

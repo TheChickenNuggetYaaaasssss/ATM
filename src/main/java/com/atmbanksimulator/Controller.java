@@ -38,6 +38,10 @@ public class Controller {
             case "Rst":
                 UIModel.processResetButton();
                 break;
+            case "New":
+                UIModel.processNewAcc();
+                System.out.println("New preseed");
+                break;
             default:
                 UIModel.processUnknownKey(action);
                 break;
