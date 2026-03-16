@@ -52,7 +52,7 @@ public class Bank {
         // - If found, set 'loggedInAccount' to that account and return true.
         // - If not found, reset 'loggedInAccount' to null and return false.
         for (BankAccount b: accounts) {
-            if (b.getAccNumber().equals(accountNumber) && b.getaccPasswd().equals(password)) {
+            if (b.getAccNumber().equals(accountNumber) && b.getAccPasswd().equals(password)) {
                 // found the right account
                 loggedInAccount = b;
                 return true;
@@ -61,6 +61,21 @@ public class Bank {
         // not found - return false
         loggedInAccount = null;
         return false;
+    }
+
+    public String updateAccPasswd(String accountNumber, String passwd) {
+        if (passwd.length() <= 5) {
+
+            for (BankAccount b : accounts) {
+                if (b.getAccNumber().equals(accountNumber)) {
+                    b.updateAccPasswd(passwd);
+                    return "Success";
+                }
+            }
+            return "Error: Account Not Found!";
+        } else {
+            return "Error: Invalid Password!";
+        }
     }
 
     // Log out of the currently logged-in account, if any
@@ -81,7 +96,7 @@ public class Bank {
 
     // Attempt to deposit money into the currently logged-in account
     // by calling the deposit method of the BankAccount object
-    public boolean deposit(int amount)
+    public boolean deposit(double amount)
     {
         if (loggedIn()) {
             return loggedInAccount.deposit(amount);
@@ -93,7 +108,7 @@ public class Bank {
 
     // Attempt to withdraw money from the currently logged-in account
     // by calling the withdraw method of the BankAccount object
-    public boolean withdraw(int amount)
+    public boolean withdraw(double amount)
     {
         if (loggedIn()) {
             return loggedInAccount.withdraw(amount);
@@ -104,7 +119,7 @@ public class Bank {
 
     // get the currently logged-in account balance
     // by calling the getBalance method of the BankAccount object
-    public int getBalance()
+    public double getBalance()
     {
         if (loggedIn()) {
             return loggedInAccount.getBalance();

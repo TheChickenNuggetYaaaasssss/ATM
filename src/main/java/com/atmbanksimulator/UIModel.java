@@ -20,6 +20,8 @@ public class UIModel {
     private final String STATE_ACCOUNT_NO = "account_no";
     private final String STATE_PASSWORD = "password";
     private final String STATE_LOGGED_IN = "logged_in";
+    private final String STATE_RESET_PASSWORD_CURRENT = "reset_password_current";
+    private final String STATE_RESET_PASSWORD_NEW = "reset_password_new";
 
     // Variables representing the state and data of the ATM UIModel
     private String state = STATE_ACCOUNT_NO;    // Current state of the ATM
@@ -141,6 +143,27 @@ public class UIModel {
                 }
                 break;
 
+            case STATE_RESET_PASSWORD_CURRENT:
+                //get current password
+                accPasswd = numberPadInput;
+                numberPadInput = "";
+
+                if (bank.login(accNumber, accPasswd) ) {
+                    setState(STATE_RESET_PASSWORD_NEW);
+                    message = "Enter New Password";
+                    update();
+                } else {
+                    message = "Incorrect Password";
+                    update();
+                }
+
+            case STATE_RESET_PASSWORD_NEW:
+                //get new password
+                accPasswd = numberPadInput;
+                numberPadInput = "";
+                message = bank.updateAccPasswd(accNumber, accPasswd);
+                update();
+
             case STATE_LOGGED_IN:
             default:
                 // Do nothing for other states (user is already logged in)
@@ -255,6 +278,21 @@ public class UIModel {
     public void processUnknownKey(String action) {
         reset("Invalid Command");
         update();
+    }
+
+
+    // test message
+    public void processResetButton() {
+        switch (state) {
+            case STATE_LOGGED_IN:
+                setState(STATE_RESET_PASSWORD_CURRENT);
+                message = "Enter your current password";
+                update();
+                break;
+            default:
+                message = "You must be logged in";
+                update();
+        }
     }
 
     // Notify the View of changes by calling its update method
