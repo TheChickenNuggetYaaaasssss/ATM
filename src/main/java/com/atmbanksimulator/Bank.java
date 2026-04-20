@@ -84,19 +84,17 @@ public class Bank {
         return false;
     }
 
-    public String updateAccPasswd(String accountNumber, String passwd) {
+    public boolean updateAccPasswd(String accountNumber, String passwd) {
         if (passwd.length() == 5) {
 
             for (BankAccount b : accounts) {
                 if (b.getAccNumber().equals(accountNumber)) {
                     b.updateAccPasswd(passwd);
-                    return "Success";
+                    return true;
                 }
             }
-            return "Error: Account Not Found!";
-        } else {
-            return "Error: Invalid Password!";
         }
+        return false;
     }
 
     // Log out of the currently logged-in account, if any

@@ -137,7 +137,7 @@ public class UIModel {
                     // Successful login: change state to STATE_LOGGED_IN and provide instructions
                     setState(STATE_LOGGED_IN);
                     message = "Logged In";
-                    result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                    result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)\n\nOr choose another function.";
                 } else {
                     // Login failed: reset ATM and display error
                     message = "Login failed: Unknown Account/Password";
@@ -154,8 +154,10 @@ public class UIModel {
                 if (bank.login(accNumber, accPasswd) ) {
                     setState(STATE_RESET_PASSWORD_NEW);
                     message = "Enter New Password";
+                    result = "Password must be 5 characters";
                 } else {
                     message = "Incorrect Password";
+                    result = "Please try again";
                 }
                 break;
 
@@ -163,7 +165,17 @@ public class UIModel {
                 //get new password
                 accPasswd = numberPadInput;
                 numberPadInput = "";
-                message = bank.updateAccPasswd(accNumber, accPasswd);
+                if ( bank.updateAccPasswd(accNumber, accPasswd) ){
+
+                    message = "Password Updated";
+                    result = "Please log in";
+                    setState(STATE_ACCOUNT_NO);
+                } else {
+
+                    message = "Password Incorrect";
+                    result = "Please try again";
+                    setState(STATE_RESET_PASSWORD_CURRENT);
+                }
                 break;
 
             case  STATE_NEW_ACCOUNT_NO:
@@ -340,10 +352,12 @@ public class UIModel {
             case STATE_LOGGED_IN:
                 setState(STATE_RESET_PASSWORD_CURRENT);
                 message = "Enter your current password";
+                result = "Then press Enter";
                 update();
                 break;
             default:
                 message = "You must be logged in";
+                result = "Please Enter your account No";
                 update();
                 break;
         }
