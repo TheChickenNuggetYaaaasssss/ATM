@@ -31,6 +31,9 @@ public class UIModel {
     private String accNumber = "";         // Account number being typed
     private String accPasswd = "";         // Password being typed
 
+    private int maxLoginAttempts = 3;
+    private int loginAttempts = 1;
+
     // Variables shown on the View display
     private String message;                // Message label text
     private String numberPadInput;         // Current number displayed in the TextField (as a string)
@@ -123,6 +126,7 @@ public class UIModel {
                     setState(STATE_PASSWORD);
                     message = "Account Number Accepted";
                     result = "Now enter your password\nFollowed by \"Ent\"";
+                    loginAttempts = 1;
                 }
                 break;
 
@@ -132,17 +136,26 @@ public class UIModel {
                     // then contact the bank to attempt login
                 accPasswd = numberPadInput;
                 numberPadInput = "";
-                if ( bank.login(accNumber, accPasswd) )
-                {
+
+                if ( loginAttempts >= maxLoginAttempts ) {
+                    message = "Enter Account No";
+                    result = "Too many login attempts\nTry another Account No";
+                    setState(STATE_ACCOUNT_NO);
+                    break;
+                }
+
+                if ( bank.login(accNumber, accPasswd) ) {
+
                     // Successful login: change state to STATE_LOGGED_IN and provide instructions
                     setState(STATE_LOGGED_IN);
                     message = "Logged In";
                     result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)\n\nOr choose another function.";
+
                 } else {
                     // Login failed: reset ATM and display error
-                    message = "Login failed: Unknown Account/Password";
-                    reset(message, STATE_ACCOUNT_NO);
-                    result = "Enter Account Number";
+                    message = "Login failed: Incorrect Password";
+                    result = "Try again, remaining attempts:" + (maxLoginAttempts - loginAttempts);
+                    loginAttempts++;
                 }
                 break;
 
