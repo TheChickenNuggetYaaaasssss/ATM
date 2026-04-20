@@ -25,11 +25,15 @@ public class UIModel {
     private final String STATE_NEW_ACCOUNT_NO = "new_account_no";
     private final String STATE_NEW_ACCOUNT_PASSWORD = "new_account_password";
     private final String STATE_NEW_ACCOUNT_TYPE = "new_account_type";
+    private final String STATE_TRANSFER_ACCOUNT_NO = "transfer_account_no";
+    private final String STATE_TRANSFER_AMOUNT = "transfer_amount";
 
     // Variables representing the state and data of the ATM UIModel
     private String state = STATE_ACCOUNT_NO;    // Current state of the ATM
     private String accNumber = "";         // Account number being typed
     private String accPasswd = "";         // Password being typed
+    private String transferAccountNo;
+    private double transferAmount;
 
     private int maxLoginAttempts = 3;
     private int loginAttempts = 1;
@@ -109,16 +113,15 @@ public class UIModel {
     public void processEnter()
     {
         // The action depends on the current ATM state
-        switch ( state )
-        {
+        switch ( state ) {
+
             case STATE_ACCOUNT_NO:
                 // Waiting for a complete account number
                 // If nothing was entered, reset with "Invalid Account Number"
                 if (numberPadInput.equals("")) {
                     message = "Invalid Account Number";
                     reset(message, STATE_ACCOUNT_NO);
-                }
-                else{
+                } else {
                     // Save the entered number as accNumber, clear numberPadInput,
                     // update the state to expect password, and provide instructions
                     accNumber = numberPadInput;
@@ -131,20 +134,20 @@ public class UIModel {
                 break;
 
             case STATE_PASSWORD:
-                    // Waiting for a password
-                    // Save the typed number as accPasswd, clear numberPadInput,
-                    // then contact the bank to attempt login
+                // Waiting for a password
+                // Save the typed number as accPasswd, clear numberPadInput,
+                // then contact the bank to attempt login
                 accPasswd = numberPadInput;
                 numberPadInput = "";
 
-                if ( loginAttempts >= maxLoginAttempts ) {
+                if (loginAttempts >= maxLoginAttempts) {
                     message = "Enter Account No";
                     result = "Too many login attempts\nTry another Account No";
                     setState(STATE_ACCOUNT_NO);
                     break;
                 }
 
-                if ( bank.login(accNumber, accPasswd) ) {
+                if (bank.login(accNumber, accPasswd)) {
 
                     // Successful login: change state to STATE_LOGGED_IN and provide instructions
                     setState(STATE_LOGGED_IN);
@@ -164,7 +167,7 @@ public class UIModel {
                 accPasswd = numberPadInput;
                 numberPadInput = "";
 
-                if (bank.login(accNumber, accPasswd) ) {
+                if (bank.login(accNumber, accPasswd)) {
                     setState(STATE_RESET_PASSWORD_NEW);
                     message = "Enter New Password";
                     result = "Password must be 5 characters";
@@ -178,7 +181,7 @@ public class UIModel {
                 //get new password
                 accPasswd = numberPadInput;
                 numberPadInput = "";
-                if ( bank.updateAccPasswd(accNumber, accPasswd) ){
+                if (bank.updateAccPasswd(accNumber, accPasswd)) {
 
                     message = "Password Updated";
                     result = "Please log in";
@@ -191,11 +194,11 @@ public class UIModel {
                 }
                 break;
 
-            case  STATE_NEW_ACCOUNT_NO:
+            case STATE_NEW_ACCOUNT_NO:
 
                 accNumber = numberPadInput;
                 numberPadInput = "";
-                if (bank.accountNumberExists(accNumber) ) {
+                if (bank.accountNumberExists(accNumber)) {
                     reset("That account number already exists", STATE_NEW_ACCOUNT_NO);
                     result = "Enter a different 5 character Account No \nFollowed by \"Ent\"";
                     break;
@@ -230,16 +233,53 @@ public class UIModel {
             case STATE_NEW_ACCOUNT_TYPE:
 
                 if (numberPadInput.equals("") || numberPadInput.length() != 1 || Integer.parseInt(numberPadInput) > 3) {
-                    reset("Invalid Account Type",  STATE_NEW_ACCOUNT_TYPE);
+                    reset("Invalid Account Type", STATE_NEW_ACCOUNT_TYPE);
                 } else {
-                    if (bank.addBankAccount(accNumber, accPasswd, 0, numberPadInput)){
+                    if (bank.addBankAccount(accNumber, accPasswd, 0, numberPadInput)) {
                         reset("Congratulations on your new account!", STATE_ACCOUNT_NO);
                         result = "Please login by entering your account No";
                     } else {
-                        reset("Error when making your account",  STATE_NEW_ACCOUNT_NO);
+                        reset("Error when making your account", STATE_NEW_ACCOUNT_NO);
                         result = "Please try again";
                     }
                 }
+                break;
+
+
+            case STATE_TRANSFER_ACCOUNT_NO:
+
+                if  (numberPadInput.equals("") || numberPadInput.length() != 5 ) {
+                    reset("Invalid Account Number", STATE_TRANSFER_ACCOUNT_NO);
+
+                } else if (bank.accountNumberExists(numberPadInput)) {
+                    transferAccountNo = numberPadInput;
+                    reset("Enter Recipient Amount",  STATE_TRANSFER_AMOUNT);
+                    result = "Please enter the amount you would like to transfer";
+                } else {
+                    reset("Invalid Account Number", STATE_TRANSFER_ACCOUNT_NO);
+                }
+                break;
+
+            case STATE_TRANSFER_AMOUNT:
+
+                if  (numberPadInput.equals("") ) {
+                    reset("Invalid amount", STATE_TRANSFER_AMOUNT);
+
+                } else {
+                    transferAmount = parseValidAmount(numberPadInput);
+                    if (bank.transfer(transferAccountNo, transferAmount)) {
+
+                        reset("Transfer Successful", STATE_LOGGED_IN);
+                        result = "Choose another function";
+
+                    } else {
+
+                        reset("Transfer Failed", STATE_TRANSFER_ACCOUNT_NO);
+                        result = "Please try again";
+                    }
+                }
+                break;
+
 
 
             case STATE_LOGGED_IN:
@@ -344,10 +384,18 @@ public class UIModel {
     public void processFinish() {
         if (state.equals(STATE_LOGGED_IN) ) {
             reset("Thank you for using the Bank ATM", STATE_ACCOUNT_NO);
+            result = "To Login Enter an account number";
             bank.logout();
         } else {
             reset("You are not logged in", STATE_ACCOUNT_NO);
         }
+        update();
+    }
+
+    public void processTransfer(){
+        setState(STATE_TRANSFER_ACCOUNT_NO);
+        message = "Recipient Account No";
+        result = "Enter the recipient's Account No";
         update();
     }
 

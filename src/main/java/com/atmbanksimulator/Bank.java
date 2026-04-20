@@ -37,6 +37,19 @@ public class Bank {
         return false;
     }
 
+    public BankAccount getAccount(String targetAccNumber) {
+        if (numAccounts > 0) {
+            for (BankAccount account : accounts) {
+                if (account != null){
+                    if (account.getAccNumber().equals(targetAccNumber)) {
+                        return account;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     // a method to add a new bank account to the bank - it returns true if it succeeds
     // or false if it fails (because the bank is 'full')
     public boolean addBankAccount(BankAccount a) {
@@ -145,5 +158,17 @@ public class Bank {
         } else {
             return -1; // use -1 as an indicator of an error
         }
+    }
+
+    public boolean transfer(String recipientAccNumber, double amount) {
+        if ( loggedIn() && loggedInAccount.getBalance() >= amount) {
+
+            BankAccount recipientAccount = getAccount(recipientAccNumber);
+            recipientAccount.deposit(amount);
+            loggedInAccount.withdraw(amount);
+
+            return true;
+        }
+        return false;
     }
 }

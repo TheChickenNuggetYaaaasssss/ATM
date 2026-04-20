@@ -40,7 +40,9 @@ public class Controller {
                 break;
             case "New":
                 UIModel.processNewAcc();
-                System.out.println("New preseed");
+                break;
+            case "Tfr":
+                UIModel.processTransfer();
                 break;
             default:
                 UIModel.processUnknownKey(action);
